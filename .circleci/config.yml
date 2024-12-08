@@ -26,11 +26,6 @@ shared: &shared
         fi
 
 jobs:
-  py37:
-    <<: *shared
-    docker:
-      - image: circleci/python:3.7
-
   py38:
     <<: *shared
     docker:
@@ -52,7 +47,6 @@ workflows:
   version: 2.1
   main:
     jobs:
-      - py37
       - py38
       - py39
       - py310
