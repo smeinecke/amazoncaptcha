@@ -26,11 +26,6 @@ shared: &shared
         fi
 
 jobs:
-  py38:
-    <<: *shared
-    docker:
-      - image: circleci/python:3.8
-
   py39:
     <<: *shared
     docker:
@@ -43,10 +38,33 @@ jobs:
         environment:
           UPLOAD_COV: "true"
 
+  py311:
+    <<: *shared
+    docker:
+      - image: circleci/python:3.11
+        environment:
+          UPLOAD_COV: "true"
+
+  py312:
+    <<: *shared
+    docker:
+      - image: circleci/python:3.12
+        environment:
+          UPLOAD_COV: "true"
+
+  py313:
+    <<: *shared
+    docker:
+      - image: circleci/python:3.13
+        environment:
+          UPLOAD_COV: "true"
+
 workflows:
   version: 2.1
   main:
     jobs:
-      - py38
       - py39
       - py310
+      - py311
+      - py312
+      - py313
