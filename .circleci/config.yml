@@ -6,10 +6,6 @@ orbs:
 shared: &shared
   steps:
     - checkout
-    - run:
-        name: Install Chromedriver latest version
-        command: |
-          sudo apt-get install xvfb
     - browser-tools/install-chrome
     - run:
         name: Install Python deps in a venv
@@ -29,33 +25,33 @@ jobs:
   py39:
     <<: *shared
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.9-browsers
 
   py310:
     <<: *shared
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.10-browsers
         environment:
           UPLOAD_COV: "true"
 
   py311:
     <<: *shared
     docker:
-      - image: cimg/python:3.11
+      - image: cimg/python:3.11-browsers
         environment:
           UPLOAD_COV: "true"
 
   py312:
     <<: *shared
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:3.12-browsers
         environment:
           UPLOAD_COV: "true"
 
   py313:
     <<: *shared
     docker:
-      - image: cimg/python:3.13
+      - image: cimg/python:3.13-browsers
         environment:
           UPLOAD_COV: "true"
 
