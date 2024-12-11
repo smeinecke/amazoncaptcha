@@ -48,13 +48,6 @@ jobs:
         environment:
           UPLOAD_COV: "true"
 
-  py313:
-    <<: *shared
-    docker:
-      - image: cimg/python:3.13-browsers
-        environment:
-          UPLOAD_COV: "true"
-
 workflows:
   version: 2.1
   main:
@@ -63,4 +56,3 @@ workflows:
       - py310
       - py311
       - py312
-      - py313
