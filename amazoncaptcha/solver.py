@@ -1,23 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""amazoncaptcha.solver
-~~~~~~~~~~~~~~~~~~~~
-
-This module contains AmazonCaptcha instance and all the requiries for it.
-
-Attributes:
-    MONOWEIGHT (int): The bigger this number - the thicker a monochromed picture
-    MAXIMUM_LETTER_LENGTH (int): Maximum letter length by X axis
-    MINIMUM_LETTER_LENGTH (int): Minimum letter length by X axis
-    SUPPORTED_CONTENT_TYPES (list of str): Used when requesting a captcha url
-        to check if Content-Type in the headers is valid
-
-"""
-
 from typing import Any, Dict
-from .utils import cut_the_white, merge_horizontally, find_letter_boxes
-from .exceptions import ContentTypeError
-
 from PIL import Image
 from io import BytesIO
 import requests
@@ -25,6 +6,8 @@ import json
 import zlib
 import os
 
+from .utils import cut_the_white, merge_horizontally, find_letter_boxes
+from .exceptions import ContentTypeError
 
 MONOWEIGHT = 1
 MAXIMUM_LETTER_LENGTH = 33

@@ -1,22 +1,15 @@
-# -*- coding: utf-8 -*-
-
-"""amazoncaptcha.devtools
-~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains the set of amazoncaptcha's devtools.
-"""
+from io import BytesIO
+import multiprocessing
+import requests
+import os
+import time
 
 from .solver import AmazonCaptcha
 from .exceptions import NotFolderError
 from .__version__ import __version__
 
-from io import BytesIO
-import multiprocessing
-import requests
-import os
 
-
-class AmazonCaptchaCollector(object):
+class AmazonCaptchaCollector():
     def __init__(self, output_folder_path, keep_logs=True, accuracy_test=False):
         """Initializes the AmazonCaptchaCollector instance.
 
@@ -57,8 +50,6 @@ class AmazonCaptchaCollector(object):
     def _extract_captcha_id(self, captcha_link):
         """Extracts a captcha id from a captcha link. If captcha_link is None, returns 'unknown'."""
         if not captcha_link:
-            import time
-
             return f"unknown_{int(time.time())}"
         return "".join(captcha_link.split("/captcha/")[1].replace(".jpg", "").split("/Captcha_"))
 
@@ -94,7 +85,7 @@ class AmazonCaptchaCollector(object):
 
     def _distribute_collecting(self, milestone):
         """Distribution function for multiprocessing."""
-        for step in milestone:
+        for _ in milestone:
             self.get_captcha_image()
 
     def start(self, target, processes):
@@ -108,7 +99,7 @@ class AmazonCaptchaCollector(object):
         goal = list(range(target))
         milestones = [goal[x : x + target // processes] for x in range(0, len(goal), target // processes)]
 
-        jobs = list()
+        jobs = []
         for j in range(processes):
             p = multiprocessing.Process(target=self._distribute_collecting, args=(milestones[j],))
             jobs.append(p)

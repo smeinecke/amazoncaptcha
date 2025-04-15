@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-
-"""amazoncaptcha.exceptions
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-This module contains the set of amazoncaptcha's exceptions.
-"""
-
-
 class ContentTypeError(Exception):
     """Requested url, which was supposed to be the url to the captcha image,
     contains unsupported content type within response headers.

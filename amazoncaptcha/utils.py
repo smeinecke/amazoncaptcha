@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-
-"""amazoncaptcha.utils
-~~~~~~~~~~~~~~~~~~~
-
-This module contains the set of amazoncaptcha's utilities.
-"""
-
 from PIL import Image, ImageChops
 
 
@@ -66,7 +58,7 @@ def find_letter_boxes(img, maxlength):
     if len(xcoords) % 2:
         xcoords.insert(1, xcoords[0])
 
-    letter_boxes = list()
+    letter_boxes = []
     for s, e in zip(xcoords[0::2], xcoords[1::2]):
         start, end = s, min(e + 1, img.width - 1)
 

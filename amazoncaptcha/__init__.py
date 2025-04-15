@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Solver for Amazon's image captcha.
 
 The motivation behind the creation of this library is taking its start from
