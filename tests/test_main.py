@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from amazoncaptcha import AmazonCaptcha, AmazonCaptchaCollector, ContentTypeError, NotFolderError, __version__
-from selenium import webdriver
 import unittest
-import sys
 import os
 
 #--------------------------------------------------------------------------------------------------------------
@@ -35,8 +33,7 @@ class TestAmazonCaptcha(unittest.TestCase):
         self.assertEqual(solution, 'KMGMXE')
 
     def test_image_with_6_unrecognizable_letters(self):
-        solution = AmazonCaptcha(os.path.join(captchas_folder, 'notsolved.jpg')).solve()
-        self.assertEqual(solution, 'Not solved')
+        self.assertEqual(AmazonCaptcha(os.path.join(captchas_folder, 'notsolved.jpg')).solve(), 'Not solved')
 
     def test_totally_broken_image(self):
         solution = AmazonCaptcha(os.path.join(captchas_folder, 'notsolved_1.jpg')).solve()
@@ -62,23 +59,6 @@ class TestAmazonCaptcha(unittest.TestCase):
 
         self.assertTrue('is not supported as a Content-Type' in str(context.exception))
 
-    def test_fromdriver(self):
-        options = webdriver.ChromeOptions()
-        options.add_argument('no-sandbox')
-        options.add_argument('headless')
-        driver = webdriver.Chrome(options=options)
-
-        solutions = list()
-        for i in range(5):
-            driver.get('https://www.amazon.com/errors/validateCaptcha')
-
-            captcha = AmazonCaptcha.fromdriver(driver)
-            solutions.append(len(captcha.solve()))
-
-        driver.quit()
-
-        self.assertIn(6, solutions)
-
     def test_collector(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder)
         collector.get_captcha_image()
@@ -95,8 +75,7 @@ class TestAmazonCaptcha(unittest.TestCase):
     def test_not_folder_error(self):
 
         with self.assertRaises(NotFolderError) as context:
-            collector = AmazonCaptchaCollector(output_folder_path = os.path.join(captchas_folder, 'notcorrupted.jpg'))
-
+            AmazonCaptchaCollector(output_folder_path = os.path.join(captchas_folder, 'notcorrupted.jpg'))
         self.assertTrue('is not a folder. Cannot store images there.' in str(context.exception))
 
     def test_accuracy_test(self):

@@ -62,16 +62,11 @@ class AmazonCaptchaCollector(object):
 
     def _extract_captcha_id(self, captcha_link):
         """
-        Extracts a captcha id from a captcha link.
-
-        Args:
-            captcha_link (str): A link to the captcha image.
-
-        Returns:
-            str: Captcha ID.
-
+        Extracts a captcha id from a captcha link. If captcha_link is None, returns 'unknown'.
         """
-
+        if not captcha_link:
+            import time
+            return f"unknown_{int(time.time())}"
         return ''.join(captcha_link.split('/captcha/')[1].replace('.jpg', '').split('/Captcha_'))
 
     def get_captcha_image(self):

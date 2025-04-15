@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amazoncaptcha"
+version = "0.1.0"
+description = "Amazon Captcha Solver (migrated from Pipfile)"
+requires-python = ">=3.9"
+dependencies = [
+    "pillow~=10.4.0",
+    "requests~=2.32.3",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[tool.setuptools]
+packages = ["amazoncaptcha"]
+
+[dependency-groups]
+dev = [
+    "codecov>=2.1.13",
+    "coverage>=7.8.0",
+    "pytest>=8.3.5",
+]

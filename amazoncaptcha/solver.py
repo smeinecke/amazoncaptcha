@@ -18,18 +18,12 @@ Attributes:
 from .utils import cut_the_white, merge_horizontally, find_letter_boxes
 from .exceptions import ContentTypeError
 
-from PIL import Image, ImageChops
+from PIL import Image
 from io import BytesIO
-import warnings
 import requests
 import json
 import zlib
 import os
-
-try:
-    from selenium.webdriver.common.by import By
-except:
-    By = None
 
 #--------------------------------------------------------------------------------------------------------------
 
@@ -49,15 +43,12 @@ class AmazonCaptcha(object):
         Args:
             img (str or io.BytesIO): Path to an input image OR an instance
                 of BytesIO representing this image.
-            image_link (str, optional): Used if `AmazonCaptcha` was created
-                using `fromdriver` class method. Defaults to None.
             devmode (bool, optional): If set to True, instead of 'Not solved',
                 unrecognised letters will be replaced with dashes.
 
         """
 
         self.img = Image.open(img, 'r')
-        self._image_link = image_link
         self.devmode = devmode
 
         self.letters = dict()
@@ -71,17 +62,14 @@ class AmazonCaptcha(object):
     def image_link(self):
         """
         Image link property is being assigned only if the instance was
-        created using `fromdriver` or `fromlink` class methods.
+        created using `fromlink` class method.
 
         If you have created an AmazonCaptcha instance using the constructor,
         the property will be equal to None which triggers the warning.
 
         """
 
-        if not self._image_link:
-            warnings.warn("Seems like you are trying to pull out the image link while not having it.", Warning, stacklevel=2)
-
-        return self._image_link
+        return None
 
     def _monochrome(self):
         """
@@ -182,50 +170,12 @@ class AmazonCaptcha(object):
 
         solution = self._translate()
 
-        if solution == 'Not solved' and keep_logs and self.image_link:
+        if solution == 'Not solved' and keep_logs:
 
             with open(logs_path, 'a', encoding='utf-8') as f:
-                f.write(self.image_link + '\n')
+                f.write('\n')
 
         return solution
-
-    @classmethod
-    def fromdriver(cls, driver, devmode=False):
-        """
-        Takes a screenshot from your webdriver, crops the captcha, and stores
-        it into bytes array, which is then used to create an AmazonCaptcha instance.
-
-        This also means avoiding any local savings.
-
-        Args:
-            driver (selenium.webdriver.*): Webdriver with opened captcha page.
-            devmode (bool, optional): If set to True, instead of 'Not solved',
-                unrecognised letters will be replaced with dashes.
-
-        Returns:
-            AmazonCaptcha: Instance created based on webdriver.
-
-        """
-
-        png = driver.get_screenshot_as_png()
-        element = driver.find_element(By.TAG_NAME, 'img')
-        image_link = element.get_attribute('src')
-
-        location = element.location
-        size = element.size
-        left = location['x']
-        top = location['y']
-        right = location['x'] + size['width']
-        bottom = location['y'] + size['height']
-
-        img = Image.open(BytesIO(png))
-        img = img.crop((left, top, right, bottom))
-
-        bytes_array = BytesIO()
-        img.save(bytes_array, format='PNG')
-        image_bytes_array = BytesIO(bytes_array.getvalue())
-
-        return cls(image_bytes_array, image_link, devmode)
 
     @classmethod
     def fromlink(cls, image_link, devmode=False, timeout=120):
@@ -257,6 +207,6 @@ class AmazonCaptcha(object):
 
         image_bytes_array = BytesIO(response.content)
 
-        return cls(image_bytes_array, image_link, devmode)
+        return cls(image_bytes_array, devmode)
 
 #--------------------------------------------------------------------------------------------------------------
