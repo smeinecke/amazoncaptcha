@@ -9,7 +9,7 @@ from .exceptions import NotFolderError
 from .__version__ import __version__
 
 
-class AmazonCaptchaCollector():
+class AmazonCaptchaCollector:
     def __init__(self, output_folder_path, keep_logs=True, accuracy_test=False):
         """Initializes the AmazonCaptchaCollector instance.
 
