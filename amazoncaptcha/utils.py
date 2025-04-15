@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-amazoncaptcha.utils
+"""amazoncaptcha.utils
 ~~~~~~~~~~~~~~~~~~~
 
 This module contains the set of amazoncaptcha's utilities.
@@ -9,11 +8,9 @@ This module contains the set of amazoncaptcha's utilities.
 
 from PIL import Image, ImageChops
 
-#--------------------------------------------------------------------------------------------------------------
 
 def cut_the_white(letter):
-    """
-    Cuts white spaces/borders to get a clear letter.
+    """Cuts white spaces/borders to get a clear letter.
 
     Args:
         letter (PIL.Image): Letter to be processed.
@@ -22,16 +19,15 @@ def cut_the_white(letter):
         PIL.Image: The letter without white spaces.
 
     """
-
     background = Image.new(letter.mode, letter.size, 255)
     diff = ImageChops.difference(letter, background)
     bbox = diff.getbbox()
 
     return letter.crop(bbox)
 
+
 def merge_horizontally(img1, img2):
-    """
-    Merges two letters horizontally.
+    """Merges two letters horizontally.
 
     Created in case an image is corrupted and the last letter ends at the
     beginning of the image, causing letter to be unreadable.
@@ -44,16 +40,15 @@ def merge_horizontally(img1, img2):
         PIL.Image: Two merged letters.
 
     """
-
-    merged = Image.new('L', (img1.width + img2.width, img1.height))
+    merged = Image.new("L", (img1.width + img2.width, img1.height))
     merged.paste(img1, (0, 0))
     merged.paste(img2, (img1.width, 0))
 
     return merged
 
+
 def find_letter_boxes(img, maxlength):
-    """
-    Finds and separates letters from a captcha image.
+    """Finds and separates letters from a captcha image.
 
     Args:
         img (PIL.Image): Monochromed captcha.
@@ -63,7 +58,6 @@ def find_letter_boxes(img, maxlength):
         letter_boxes (:obj:`list` of :obj:`tuple`): List with X coords of each letter.
 
     """
-
     image_columns = [[img.getpixel((x, y)) for y in range(img.height)] for x in range(img.width)]
     image_code = [1 if 0 in column else 0 for column in image_columns]
     xpoints = [d for d, s in zip(range(len(image_code)), image_code) if s]
@@ -80,10 +74,8 @@ def find_letter_boxes(img, maxlength):
             letter_boxes.append((start, end))
 
         else:
-            two_letters = {k: v.count(0) for k, v in enumerate(image_columns[start + 5:end - 5])}
-            divider = min(two_letters, key=two_letters.get) + 5
+            two_letters = {k: v.count(0) for k, v in enumerate(image_columns[start + 5 : end - 5])}
+            divider = min(two_letters, key=lambda k: two_letters[k]) + 5
             letter_boxes.extend([(start, start + divider), (start + divider + 1, end)])
 
     return letter_boxes
-
-#--------------------------------------------------------------------------------------------------------------
