@@ -16,11 +16,31 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install uv
-        run: pip install uv
+
+      - name: Cache Primes
+        id: cache-primes
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            ~/.cache/pip
+          key: uv-cache-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            uv-cache-
+
+      - name: Set up Python environment
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install uv
+
       - name: Install dependencies
         run: |
-          uv pip install .
-          uv pip install pytest
+          source .venv/bin/activate
+          uv pip install -r <(uv pip compile --all-extras pyproject.toml)
+          uv pip install ruff tox xenon bandit pyright vulture pytest
+
       - name: Run tests
-        run: pytest --maxfail=1 --disable-warnings -v
+        run: |
+          source .venv/bin/activate
+          pytest --maxfail=1 --disable-warnings -v
