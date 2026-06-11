@@ -1,4 +1,4 @@
-name: Python Code Checks
+name: Code Checks
 
 permissions:
   contents: read
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  validate:
     name: Validate Code
     runs-on: ubuntu-latest
 
@@ -17,8 +17,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Primes
-        id: cache-primes
+      - name: Cache dependencies
+        id: cache-deps
         uses: actions/cache@v4
         with:
           path: |
@@ -34,25 +34,47 @@ jobs:
           uv sync --group dev
 
       - name: Run Ruff (PEP 8 Formatting)
-        run: |
-          uv run make format
+        run: uv run make format
 
       - name: Run Ruff (Linting + Docstrings)
-        run: |
-          uv run make check
+        run: uv run make check
 
       - name: Run vulture (Duplicate Code)
-        run: |
-          uv run make vulture
+        run: uv run make vulture
 
       - name: Run xenon (Cyclomatic Complexity)
-        run: |
-          uv run make xenon
+        run: uv run make xenon
 
       - name: Run bandit (Security)
-        run: |
-          uv run make bandit
+        run: uv run make bandit
 
       - name: Run pyright (Type Checking)
+        run: uv run make pyright
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            ~/.cache/pip
+          key: uv-cache-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            uv-cache-
+
+      - name: Set up Python environment
         run: |
-          uv run make pyright
+          wget -qO- https://astral.sh/uv/install.sh | sh
+          uv sync --group dev
+
+      - name: Run tests
+        run: uv run pytest --maxfail=1 --disable-warnings -v
