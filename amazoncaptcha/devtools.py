@@ -46,7 +46,12 @@ class AmazonCaptchaCollector:
             str: Captcha link.
 
         """
+        print(f"[DEBUG] Amazon HTML length: {len(captcha_page.text)}")
+        print(f"[DEBUG] First 500 chars: {captcha_page.text[:500]!r}")
+        all_img_srcs = re.findall(r'src="([^"]+)"', captcha_page.text)
+        print(f"[DEBUG] All src URLs: {all_img_srcs}")
         matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
+        print(f"[DEBUG] Captcha matches: {matches}")
         return matches[0] if matches else ""
 
     def _extract_captcha_id(self, captcha_link):
