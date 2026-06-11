@@ -1,8 +1,9 @@
 from io import BytesIO
 import multiprocessing
+import os
 import re
 import requests
-import os
+import tempfile
 import time
 
 from . import __version__
@@ -46,7 +47,7 @@ class AmazonCaptchaCollector:
             str: Captcha link.
 
         """
-        debug_path = os.environ.get("AMAZONCAPTCHA_DEBUG_PATH", "/tmp/amazoncaptcha_debug.log")
+        debug_path = os.environ.get("AMAZONCAPTCHA_DEBUG_PATH", os.path.join(tempfile.gettempdir(), "amazoncaptcha_debug.log"))
         with open(debug_path, "a", encoding="utf-8") as dbg:
             dbg.write(f"\n--- Amazon HTML ({len(captcha_page.text)} chars) ---\n")
             dbg.write(captcha_page.text[:2000])
