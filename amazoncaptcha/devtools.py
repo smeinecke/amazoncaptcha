@@ -1,5 +1,6 @@
 from io import BytesIO
 import multiprocessing
+import re
 import requests
 import os
 import time
@@ -45,7 +46,8 @@ class AmazonCaptchaCollector:
             str: Captcha link.
 
         """
-        return captcha_page.text.split('<img src="')[1].split('">')[0]
+        matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
+        return matches[0] if matches else ""
 
     def _extract_captcha_id(self, captcha_link):
         """Extracts a captcha id from a captcha link. If captcha_link is None, returns 'unknown'."""
@@ -65,6 +67,9 @@ class AmazonCaptchaCollector:
         try:
             captcha_page = requests.get("https://www.amazon.com/errors/validateCaptcha", timeout=30)
             captcha_link = self._extract_captcha_link(captcha_page)
+
+            if not captcha_link:
+                raise RuntimeError("No captcha image found on the page")
 
             response = requests.get(captcha_link, timeout=30)
             captcha = AmazonCaptcha(BytesIO(response.content))
