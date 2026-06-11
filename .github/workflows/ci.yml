@@ -33,16 +33,9 @@ jobs:
 
       - name: Set up Python environment
         run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install uv
-
-      - name: Install dependencies
-        run: |
-          source .venv/bin/activate
-          uv pip install -e . --group dev
+          wget -qO- https://astral.sh/uv/install.sh | sh
+          uv sync --group dev
 
       - name: Run tests
         run: |
-          source .venv/bin/activate
-          pytest --maxfail=1 --disable-warnings -v
+          uv run pytest --maxfail=1 --disable-warnings -v
