@@ -46,12 +46,19 @@ class AmazonCaptchaCollector:
             str: Captcha link.
 
         """
-        print(f"[DEBUG] Amazon HTML length: {len(captcha_page.text)}")
-        print(f"[DEBUG] First 500 chars: {captcha_page.text[:500]!r}")
-        all_img_srcs = re.findall(r'src="([^"]+)"', captcha_page.text)
-        print(f"[DEBUG] All src URLs: {all_img_srcs}")
-        matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
-        print(f"[DEBUG] Captcha matches: {matches}")
+        debug_path = os.environ.get("AMAZONCAPTCHA_DEBUG_PATH", "/tmp/amazoncaptcha_debug.log")
+        with open(debug_path, "a", encoding="utf-8") as dbg:
+            dbg.write(f"\n--- Amazon HTML ({len(captcha_page.text)} chars) ---\n")
+            dbg.write(captcha_page.text[:2000])
+            dbg.write("\n--- src URLs ---\n")
+            all_img_srcs = re.findall(r'src="([^"]+)"', captcha_page.text)
+            for src in all_img_srcs:
+                dbg.write(f"  {src}\n")
+            dbg.write("--- captcha matches ---\n")
+            matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
+            for m in matches:
+                dbg.write(f"  {m}\n")
+            dbg.write(f"--- result: {matches[0] if matches else 'NONE'} ---\n")
         return matches[0] if matches else ""
 
     def _extract_captcha_id(self, captcha_link):

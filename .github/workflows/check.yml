@@ -78,3 +78,12 @@ jobs:
 
       - name: Run tests
         run: uv run pytest --maxfail=1 --disable-warnings -v -s
+        env:
+          AMAZONCAPTCHA_DEBUG_PATH: /tmp/amazoncaptcha_debug.log
+
+      - name: Upload debug artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amazoncaptcha-debug
+          path: /tmp/amazoncaptcha_debug.log
