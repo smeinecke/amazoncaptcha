@@ -37,9 +37,12 @@ Examples:
 
 """
 
-from importlib.metadata import version
+from importlib.metadata import version, PackageNotFoundError
 
-__version__ = version("amazoncaptcha")
+try:
+    __version__ = version("amazoncaptcha")
+except PackageNotFoundError:
+    __version__ = "0.0.0+dev"
 __title__ = "amazoncaptcha"
 __description__ = "Pure Python, lightweight, Pillow-based solver for the Amazon text captcha."
 __url__ = "https://github.com/smeinecke/amazoncaptcha"
