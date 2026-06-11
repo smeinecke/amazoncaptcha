@@ -4,6 +4,8 @@ from amazoncaptcha import AmazonCaptcha, AmazonCaptchaCollector, ContentTypeErro
 from amazoncaptcha import __version__
 import unittest
 import os
+import io
+from unittest.mock import patch
 
 #--------------------------------------------------------------------------------------------------------------
 
@@ -62,8 +64,12 @@ class TestAmazonCaptcha(unittest.TestCase):
 
     def test_collector_handles_missing_captcha(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder)
-        collector.get_captcha_image()
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            collector.get_captcha_image()
+            output = mock_stdout.getvalue()
 
+        self.assertIn("Error fetching captcha", output)
+        self.assertIn("No captcha image found on the page", output)
         self.assertIn(f'collector-logs-{__version__.replace(".", "")}.log', os.listdir(test_folder))
 
     def test_not_folder_error(self):
@@ -74,13 +80,18 @@ class TestAmazonCaptcha(unittest.TestCase):
 
     def test_accuracy_test_logs_errors(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder, accuracy_test=True)
-        collector.get_captcha_image()
-        collector._distribute_collecting(range(4))
+        with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+            collector.get_captcha_image()
+            collector._distribute_collecting(range(4))
+            output = mock_stdout.getvalue()
 
+        self.assertIn("Error fetching captcha", output)
+        self.assertIn("No captcha image found on the page", output)
         self.assertIn(f'collector-logs-{__version__.replace(".", "")}.log', os.listdir(test_folder))
 
         with open(collector.collector_logs, "r", encoding="utf-8") as f:
             logs = f.read()
         self.assertIn("ERROR::", logs)
+        self.assertIn("No captcha image found on the page", logs)
 
 #--------------------------------------------------------------------------------------------------------------

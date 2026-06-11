@@ -77,4 +77,4 @@ jobs:
           uv sync --group dev
 
       - name: Run tests
-        run: uv run pytest --maxfail=1 --disable-warnings -v
+        run: uv run pytest --maxfail=1 --disable-warnings -v -s
