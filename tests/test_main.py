@@ -5,6 +5,8 @@ from amazoncaptcha import __version__
 import unittest
 import os
 
+requires_network = unittest.skipIf(os.getenv("CI"), "requires network access")
+
 #--------------------------------------------------------------------------------------------------------------
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -40,18 +42,21 @@ class TestAmazonCaptcha(unittest.TestCase):
         solution = AmazonCaptcha(os.path.join(captchas_folder, 'notsolved_1.jpg')).solve()
         self.assertEqual(solution, 'Not solved')
 
+    @requires_network
     def test_fromlink_with_predefined_undolvable_captcha(self):
         link = 'https://i.ibb.co/Cn2J1mS/notsolved.jpg'
         captcha = AmazonCaptcha.fromlink(link)
         solution = captcha.solve()
         self.assertEqual(solution, 'Not solved')
 
+    @requires_network
     def test_fromlink_with_predefined_undolvable_captcha_and_keep_logs(self):
         link = 'https://i.ibb.co/Cn2J1mS/notsolved.jpg'
         captcha = AmazonCaptcha.fromlink(link)
         solution = captcha.solve(keep_logs=True)
         self.assertIn('not-solved-captcha.log', os.listdir())
 
+    @requires_network
     def test_content_type_error(self):
         link = 'https://ibb.co/kh13H5P'
 
@@ -60,6 +65,7 @@ class TestAmazonCaptcha(unittest.TestCase):
 
         self.assertTrue('is not supported as a Content-Type' in str(context.exception))
 
+    @requires_network
     def test_collector(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder)
         collector.get_captcha_image()
@@ -67,6 +73,7 @@ class TestAmazonCaptcha(unittest.TestCase):
 
         self.assertGreaterEqual(len(os.listdir(test_folder)), 4)
 
+    @requires_network
     def test_collector_in_multiprocessing(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder)
         collector.start(target = 13, processes = 2)
@@ -79,6 +86,7 @@ class TestAmazonCaptcha(unittest.TestCase):
             AmazonCaptchaCollector(output_folder_path = os.path.join(captchas_folder, 'notcorrupted.jpg'))
         self.assertTrue('is not a folder. Cannot store images there.' in str(context.exception))
 
+    @requires_network
     def test_accuracy_test(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder, accuracy_test=True)
         collector.get_captcha_image()
@@ -86,6 +94,7 @@ class TestAmazonCaptcha(unittest.TestCase):
 
         self.assertIn(f'collector-logs-{__version__.replace(".", "")}.log', os.listdir(test_folder))
 
+    @requires_network
     def test_accuracy_test_in_multiprocessing(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder, accuracy_test=True)
         collector.start(target = 12, processes = 2)
