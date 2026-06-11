@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from amazoncaptcha import AmazonCaptcha, AmazonCaptchaCollector, ContentTypeError, NotFolderError, __version__
+from amazoncaptcha import AmazonCaptcha, AmazonCaptchaCollector, ContentTypeError, NotFolderError
+from amazoncaptcha import __version__
 import unittest
 import os
 
@@ -83,7 +84,7 @@ class TestAmazonCaptcha(unittest.TestCase):
         collector.get_captcha_image()
         collector._distribute_collecting(range(4))
 
-        self.assertIn(f'collector-logs-{__version__.__version__.replace(".", "")}.log', os.listdir(test_folder))
+        self.assertIn(f'collector-logs-{__version__.replace(".", "")}.log', os.listdir(test_folder))
 
     def test_accuracy_test_in_multiprocessing(self):
         collector = AmazonCaptchaCollector(output_folder_path = test_folder, accuracy_test=True)

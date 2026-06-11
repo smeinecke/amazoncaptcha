@@ -16,7 +16,7 @@ SUPPORTED_CONTENT_TYPES = ["image/jpeg"]
 
 
 class AmazonCaptcha(object):
-    _image_link: str
+    _image_link: str | None
     letters: Dict[str, Any]
 
     def __init__(self, img, image_link=None, devmode=False):
@@ -42,13 +42,13 @@ class AmazonCaptcha(object):
     @property
     def image_link(self):
         """Image link property is being assigned only if the instance was
-        created using `fromlink` class method.
+        created using `fromlink` or `fromdriver` class methods.
 
         If you have created an AmazonCaptcha instance using the constructor,
         the property will be equal to None which triggers the warning.
 
         """
-        return None
+        return getattr(self, "_image_link", None)
 
     def _monochrome(self):
         """Makes a captcha pure monochrome.
@@ -84,7 +84,8 @@ class AmazonCaptcha(object):
         Populates 'self.letters' with pseudo binaries.
         """
         for place, letter in self.letters.items():
-            letter_data = list(letter.getdata())
+            getdata = getattr(letter, "get_flattened_data", letter.getdata)
+            letter_data = list(getdata())
             letter_data_string = "".join(["1" if pix == 0 else "0" for pix in letter_data])
 
             pseudo_binary = str(zlib.compress(letter_data_string.encode("utf-8")))
@@ -144,7 +145,7 @@ class AmazonCaptcha(object):
 
         if solution == "Not solved" and keep_logs:
             with open(logs_path, "a", encoding="utf-8") as f:
-                f.write("\n")
+                f.write(f"{getattr(self, '_image_link', '')}\n")
 
         return solution
 
@@ -171,9 +172,49 @@ class AmazonCaptcha(object):
         """
         response = requests.get(image_link, timeout=timeout)
 
-        if response.headers["Content-Type"] not in SUPPORTED_CONTENT_TYPES:
-            raise ContentTypeError(response.headers["Content-Type"])
+        content_type = response.headers.get("Content-Type", "").split(";")[0].strip()
+        if content_type not in SUPPORTED_CONTENT_TYPES:
+            raise ContentTypeError(content_type)
 
         image_bytes_array = BytesIO(response.content)
 
-        return cls(image_bytes_array, devmode)
+        instance = cls(image_bytes_array, devmode)
+        instance._image_link = image_link
+        return instance
+
+    @classmethod
+    def fromdriver(cls, webdriver, devmode=False):
+        """Takes a screenshot from a selenium webdriver, crops the captcha
+        and stores it into bytes array which is then used to create an
+        AmazonCaptcha instance. This also means avoiding any local savings.
+
+        Args:
+            webdriver (selenium.webdriver): Selenium webdriver instance.
+            devmode (bool, optional): If set to True, instead of 'Not solved',
+                unrecognised letters will be replaced with dashes.
+
+        Returns:
+            AmazonCaptcha: Instance created based on the webdriver screenshot.
+
+        """
+        png = webdriver.get_screenshot_as_png()
+        screenshot = Image.open(BytesIO(png))
+
+        captcha = AmazonCaptcha.fromlink(webdriver.find_element_by_xpath("//div[@class='a-row a-text-center']//img").get_attribute("src"))
+
+        location = webdriver.find_element_by_xpath("//div[@class='a-row a-text-center']//img").location
+        size = webdriver.find_element_by_xpath("//div[@class='a-row a-text-center']//img").size
+
+        left = location["x"]
+        right = location["x"] + size["width"]
+        top = location["y"]
+        bottom = location["y"] + size["height"]
+
+        cropped = screenshot.crop((left, top, right, bottom))
+        image_bytes_array = BytesIO()
+        cropped.save(image_bytes_array, format="PNG")
+        image_bytes_array.seek(0)
+
+        instance = cls(image_bytes_array, devmode)
+        instance._image_link = captcha.image_link
+        return instance

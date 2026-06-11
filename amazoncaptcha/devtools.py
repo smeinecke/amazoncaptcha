@@ -4,9 +4,9 @@ import requests
 import os
 import time
 
+from . import __version__
 from .solver import AmazonCaptcha
 from .exceptions import NotFolderError
-from .__version__ import __version__
 
 
 class AmazonCaptchaCollector:
@@ -62,26 +62,32 @@ class AmazonCaptchaCollector:
         will be stored, mentioning the captcha link being processed and the result.
 
         """
-        captcha_page = requests.get("https://www.amazon.com/errors/validateCaptcha", timeout=30)
-        captcha_link = self._extract_captcha_link(captcha_page)
+        try:
+            captcha_page = requests.get("https://www.amazon.com/errors/validateCaptcha", timeout=30)
+            captcha_link = self._extract_captcha_link(captcha_page)
 
-        response = requests.get(captcha_link, timeout=30)
-        captcha = AmazonCaptcha(BytesIO(response.content))
-        captcha._image_link = captcha_link
-        original_image = captcha.img
+            response = requests.get(captcha_link, timeout=30)
+            captcha = AmazonCaptcha(BytesIO(response.content))
+            captcha._image_link = captcha_link
+            original_image = captcha.img
 
-        solution = captcha.solve(keep_logs=self.keep_logs, logs_path=self.not_solved_logs)
-        log_message = f"{captcha.image_link}::{solution}"
+            solution = captcha.solve(keep_logs=self.keep_logs, logs_path=self.not_solved_logs)
+            log_message = f"{captcha.image_link}::{solution}"
 
-        if solution != "Not solved" and not self.accuracy_test:
-            print(log_message)
-            captcha_name = "dl_" + self._extract_captcha_id(captcha.image_link) + "_" + solution + ".png"
-            original_image.save(os.path.join(self.output_folder, captcha_name))
+            if solution != "Not solved" and not self.accuracy_test:
+                print(log_message)
+                captcha_name = "dl_" + self._extract_captcha_id(captcha.image_link) + "_" + solution + ".png"
+                original_image.save(os.path.join(self.output_folder, captcha_name))
 
-        else:
-            print(log_message)
+            else:
+                print(log_message)
+                with open(self.collector_logs, "a", encoding="utf-8") as f:
+                    f.write(log_message + "\n")
+
+        except Exception as e:
+            print(f"Error fetching captcha: {e}")
             with open(self.collector_logs, "a", encoding="utf-8") as f:
-                f.write(log_message + "\n")
+                f.write(f"ERROR::{e}\n")
 
     def _distribute_collecting(self, milestone):
         """Distribution function for multiprocessing."""
@@ -97,7 +103,8 @@ class AmazonCaptchaCollector:
 
         """
         goal = list(range(target))
-        milestones = [goal[x : x + target // processes] for x in range(0, len(goal), target // processes)]
+        chunk_size = max(target // processes, 1)
+        milestones = [goal[x : x + chunk_size] for x in range(0, len(goal), chunk_size)]
 
         jobs = []
         for j in range(processes):
@@ -109,12 +116,15 @@ class AmazonCaptchaCollector:
             proc.join()
 
         if self.accuracy_test:
-            with open(self.collector_logs, "r", encoding="utf-8") as f:
-                output = f.readlines()
+            if not os.path.exists(self.collector_logs):
+                output = []
+            else:
+                with open(self.collector_logs, "r", encoding="utf-8") as f:
+                    output = f.readlines()
 
             all_captchas = len(output)
-            solved_captchas = len([i for i in output if "Not solved" not in i])
-            success_percentage = round((solved_captchas / all_captchas) * 100, 5)
+            solved_captchas = len([i for i in output if "Not solved" not in i and "ERROR" not in i])
+            success_percentage = round((solved_captchas / all_captchas) * 100, 5) if all_captchas else 0.0
             result = f"::Test::Ver{__version__}::Cap{all_captchas}::Per{success_percentage}::"
 
             with open(self.test_results, "w", encoding="utf-8") as f:

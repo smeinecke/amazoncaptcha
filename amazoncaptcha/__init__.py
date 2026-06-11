@@ -37,6 +37,17 @@ Examples:
 
 """
 
+from importlib.metadata import version
+
+__version__ = version("amazoncaptcha")
+__title__ = "amazoncaptcha"
+__description__ = "Pure Python, lightweight, Pillow-based solver for the Amazon text captcha."
+__url__ = "https://github.com/smeinecke/amazoncaptcha"
+__author__ = "Stefan Meinecke"
+__author_email__ = "meinecke@greensec.de"
+__license__ = "MIT"
+__copyright__ = "Copyright 2024 Stefan Meinecke"
+
 from .solver import AmazonCaptcha
 from .devtools import AmazonCaptchaCollector
 from .exceptions import ContentTypeError, NotFolderError

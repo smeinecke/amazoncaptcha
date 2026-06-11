@@ -15,6 +15,9 @@ def cut_the_white(letter):
     diff = ImageChops.difference(letter, background)
     bbox = diff.getbbox()
 
+    if bbox is None:
+        return letter
+
     return letter.crop(bbox)
 
 
