@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=82.0.1"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,8 +8,8 @@ version = "1.0.0"
 description = "Amazon Captcha Solver"
 requires-python = ">=3.9"
 dependencies = [
-    "pillow>=11.3.0",
-    "requests>=2.32.5",
+    "pillow>=12.3.0",
+    "requests>=2.34.2",
 ]
 
 [tool.setuptools]
@@ -17,13 +17,13 @@ packages = ["amazoncaptcha"]
 
 [dependency-groups]
 dev = [
-    "bandit>=1.8.6",
+    "bandit>=1.9.4",
     "codecov>=2.1.13",
-    "coverage>=7.10.7",
-    "pre-commit>=4.3.0",
-    "pyright>=1.1.410",
-    "pytest>=8.4.2",
-    "ruff>=0.15.16",
+    "coverage>=7.16.2",
+    "pre-commit>=4.6.2",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
     "vulture>=2.16",
     "xenon>=0.9.3",
 ]
