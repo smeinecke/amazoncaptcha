@@ -1,50 +1,48 @@
 version: 2.1
 
-orbs:
-  browser-tools: circleci/browser-tools@1.2.4
-
 shared: &shared
   steps:
     - checkout
-    - browser-tools/install-chrome
     - run:
-        name: Install Python deps in a venv
+        name: Install uv and Python deps
         command: |
-          pip install --upgrade pip
-          pip install -r ext/requirements-dev.txt
+          pip install uv
+          uv sync --group dev
     - run:
         name: Running tests
         command: |
-          coverage run -m unittest tests/test_main.py
+          uv run coverage run -m unittest tests/test_main.py
     - run: |
         if [ $UPLOAD_COV ]; then
-          codecov
+          uv run codecov
         fi
 
 jobs:
-  py39:
-    <<: *shared
-    docker:
-      - image: cimg/python:3.9-browsers
-
   py310:
     <<: *shared
     docker:
-      - image: cimg/python:3.10-browsers
+      - image: cimg/python:3.10
         environment:
           UPLOAD_COV: "true"
 
   py311:
     <<: *shared
     docker:
-      - image: cimg/python:3.11-browsers
+      - image: cimg/python:3.11
         environment:
           UPLOAD_COV: "true"
 
   py312:
     <<: *shared
     docker:
-      - image: cimg/python:3.12-browsers
+      - image: cimg/python:3.12
+        environment:
+          UPLOAD_COV: "true"
+
+  py313:
+    <<: *shared
+    docker:
+      - image: cimg/python:3.13
         environment:
           UPLOAD_COV: "true"
 
@@ -52,7 +50,7 @@ workflows:
   version: 2.1
   main:
     jobs:
-      - py39
       - py310
       - py311
       - py312
+      - py313

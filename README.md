@@ -40,7 +40,7 @@ An example of the constructor usage. Scroll a bit down to see some tasty class m
 ```python
 from amazoncaptcha import AmazonCaptcha
 
-captcha = AmazonCaptcha('captcha.jpg')
+captcha = AmazonCaptcha("captcha.jpg")
 solution = captcha.solve()
 
 # Or: solution = AmazonCaptcha('captcha.jpg').solve()
@@ -59,8 +59,8 @@ Browsing Amazon using `selenium` and stuck on captcha? The class method below wi
 from amazoncaptcha import AmazonCaptcha
 from selenium import webdriver
 
-driver = webdriver.Chrome() # This is a simplified example
-driver.get('https://www.amazon.com/errors/validateCaptcha')
+driver = webdriver.Chrome()  # This is a simplified example
+driver.get("https://www.amazon.com/errors/validateCaptcha")
 
 captcha = AmazonCaptcha.fromdriver(driver)
 solution = captcha.solve()
@@ -70,7 +70,7 @@ If you are not using `selenium` or the previous method is not just the case for 
 ```python
 from amazoncaptcha import AmazonCaptcha
 
-link = 'https://images-na.ssl-images-amazon.com/captcha/usvmgloq/Captcha_kwrrnqwkph.jpg'
+link = "https://images-na.ssl-images-amazon.com/captcha/usvmgloq/Captcha_kwrrnqwkph.jpg"
 
 captcha = AmazonCaptcha.fromlink(link)
 solution = captcha.solve()
@@ -84,8 +84,8 @@ If you are willing to help the development, consider setting `keep_logs` argumen
 from amazoncaptcha import AmazonCaptcha
 from selenium import webdriver
 
-driver = webdriver.Chrome() # This is a simplified example
-driver.get('https://www.amazon.com/errors/validateCaptcha')
+driver = webdriver.Chrome()  # This is a simplified example
+driver.get("https://www.amazon.com/errors/validateCaptcha")
 
 captcha = AmazonCaptcha.fromdriver(driver)
 solution = captcha.solve(keep_logs=True)
