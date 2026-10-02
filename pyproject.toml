@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "amazoncaptcha"
 version = "1.0.0"
 description = "Amazon Captcha Solver"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "pillow>=12.3.0",
     "requests>=2.34.2",
