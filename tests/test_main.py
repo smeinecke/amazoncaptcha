@@ -13,6 +13,15 @@ here = os.path.abspath(os.path.dirname(__file__))
 captchas_folder = os.path.join(here, 'captchas')
 test_folder = os.path.join(here, 'test_folder')
 
+
+class FakeResponse:
+    def __init__(self, content=b'', content_type='image/jpeg'):
+        self.content = content
+        self.headers = {'Content-Type': content_type}
+
+    def raise_for_status(self):
+        pass
+
 class TestAmazonCaptcha(unittest.TestCase):
 
     def test_not_corrupted_image(self):
@@ -43,22 +52,29 @@ class TestAmazonCaptcha(unittest.TestCase):
         self.assertEqual(solution, 'Not solved')
 
     def test_fromlink_with_predefined_undolvable_captcha(self):
-        link = 'https://i.ibb.co/Cn2J1mS/notsolved.jpg'
-        captcha = AmazonCaptcha.fromlink(link)
+        with open(os.path.join(captchas_folder, 'notsolved.jpg'), 'rb') as f:
+            content = f.read()
+
+        with patch('amazoncaptcha.solver.requests.get', return_value=FakeResponse(content)):
+            captcha = AmazonCaptcha.fromlink('https://i.ibb.co/Cn2J1mS/notsolved.jpg')
+
         solution = captcha.solve()
         self.assertEqual(solution, 'Not solved')
 
     def test_fromlink_with_predefined_undolvable_captcha_and_keep_logs(self):
-        link = 'https://i.ibb.co/Cn2J1mS/notsolved.jpg'
-        captcha = AmazonCaptcha.fromlink(link)
+        with open(os.path.join(captchas_folder, 'notsolved.jpg'), 'rb') as f:
+            content = f.read()
+
+        with patch('amazoncaptcha.solver.requests.get', return_value=FakeResponse(content)):
+            captcha = AmazonCaptcha.fromlink('https://i.ibb.co/Cn2J1mS/notsolved.jpg')
+
         solution = captcha.solve(keep_logs=True)
         self.assertIn('not-solved-captcha.log', os.listdir())
 
     def test_content_type_error(self):
-        link = 'https://ibb.co/kh13H5P'
-
-        with self.assertRaises(ContentTypeError) as context:
-            AmazonCaptcha.fromlink(link)
+        with patch('amazoncaptcha.solver.requests.get', return_value=FakeResponse(b'<html></html>', 'text/html')):
+            with self.assertRaises(ContentTypeError) as context:
+                AmazonCaptcha.fromlink('https://ibb.co/kh13H5P')
 
         self.assertTrue('is not supported as a Content-Type' in str(context.exception))
 

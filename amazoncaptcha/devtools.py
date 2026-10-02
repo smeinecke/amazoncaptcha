@@ -45,7 +45,7 @@ class AmazonCaptchaCollector:
             str: Captcha link.
 
         """
-        matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
+        matches = re.findall(r'src="([^"]*captcha[^"]*\.(?:jpe?g|png|webp|gif)[^"]*)"', captcha_page.text, re.IGNORECASE)
 
         debug_path = os.environ.get("AMAZONCAPTCHA_DEBUG_PATH")
         if debug_path:
@@ -144,6 +144,6 @@ class AmazonCaptchaCollector:
             success_percentage = round((solved_captchas / all_captchas) * 100, 5) if all_captchas else 0.0
             result = f"::Test::Ver{__version__}::Cap{all_captchas}::Per{success_percentage}::"
 
+            print(result)
             with open(self.test_results, "w", encoding="utf-8") as f:
-                print(result)
                 f.write(result)

@@ -12,7 +12,7 @@ from .exceptions import ContentTypeError
 MONOWEIGHT = 1
 MAXIMUM_LETTER_LENGTH = 33
 MINIMUM_LETTER_LENGTH = 14
-SUPPORTED_CONTENT_TYPES = ["image/jpeg"]
+SUPPORTED_CONTENT_TYPES = ("image/",)
 
 
 class AmazonCaptcha(object):
@@ -45,8 +45,8 @@ class AmazonCaptcha(object):
         """Image link property is being assigned only if the instance was
         created using `fromlink` or `fromdriver` class methods.
 
-        If you have created an AmazonCaptcha instance using the constructor,
-        the property will be equal to None which triggers the warning.
+        If you have created an AmazonCaptcha instance using the constructor
+        without passing an image link, the property will be equal to None.
 
         """
         return getattr(self, "_image_link", None)
@@ -146,9 +146,9 @@ class AmazonCaptcha(object):
 
         solution = self._translate()
 
-        if solution == "Not solved" and keep_logs:
+        if solution == "Not solved" and keep_logs and self.image_link:
             with open(logs_path, "a", encoding="utf-8") as f:
-                f.write(f"{self.image_link or ''}\n")
+                f.write(f"{self.image_link}\n")
 
         return solution
 
@@ -174,9 +174,10 @@ class AmazonCaptcha(object):
 
         """
         response = requests.get(image_link, timeout=timeout)
+        response.raise_for_status()
 
         content_type = response.headers.get("Content-Type", "").split(";")[0].strip()
-        if content_type not in SUPPORTED_CONTENT_TYPES:
+        if not content_type.startswith(SUPPORTED_CONTENT_TYPES):
             raise ContentTypeError(content_type)
 
         image_bytes_array = BytesIO(response.content)
