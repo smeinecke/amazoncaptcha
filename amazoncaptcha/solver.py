@@ -31,6 +31,7 @@ class AmazonCaptcha(object):
         """
         self.img = Image.open(img, "r")
         self.devmode = devmode
+        self._image_link = image_link
 
         self.letters = dict()
         self.result = dict()
@@ -103,15 +104,17 @@ class AmazonCaptcha(object):
                 a solution where unrecognised letters will be replaces with dashes
 
         """
-        for place, pseudo_binary in self.letters.items():
-            for letter in self.alphabet:
-                with open(
-                    os.path.join(self.training_data_folder, letter + ".json"),
-                    "r",
-                    encoding="utf-8",
-                ) as js:
-                    data = json.loads(js.read())
+        patterns = {}
+        for letter in self.alphabet:
+            with open(
+                os.path.join(self.training_data_folder, letter + ".json"),
+                "r",
+                encoding="utf-8",
+            ) as js:
+                patterns[letter] = json.loads(js.read())
 
+        for place, pseudo_binary in self.letters.items():
+            for letter, data in patterns.items():
                 if pseudo_binary in data:
                     self.result[place] = letter
                     break
@@ -145,7 +148,7 @@ class AmazonCaptcha(object):
 
         if solution == "Not solved" and keep_logs:
             with open(logs_path, "a", encoding="utf-8") as f:
-                f.write(f"{getattr(self, '_image_link', '')}\n")
+                f.write(f"{self.image_link or ''}\n")
 
         return solution
 
@@ -178,9 +181,7 @@ class AmazonCaptcha(object):
 
         image_bytes_array = BytesIO(response.content)
 
-        instance = cls(image_bytes_array, devmode)
-        instance._image_link = image_link
-        return instance
+        return cls(image_bytes_array, image_link=image_link, devmode=devmode)
 
     @classmethod
     def fromdriver(cls, webdriver, devmode=False):
@@ -200,10 +201,10 @@ class AmazonCaptcha(object):
         png = webdriver.get_screenshot_as_png()
         screenshot = Image.open(BytesIO(png))
 
-        captcha = AmazonCaptcha.fromlink(webdriver.find_element_by_xpath("//div[@class='a-row a-text-center']//img").get_attribute("src"))
-
-        location = webdriver.find_element_by_xpath("//div[@class='a-row a-text-center']//img").location
-        size = webdriver.find_element_by_xpath("//div[@class='a-row a-text-center']//img").size
+        element = webdriver.find_element("xpath", "//div[@class='a-row a-text-center']//img")
+        image_link = element.get_attribute("src")
+        location = element.location
+        size = element.size
 
         left = location["x"]
         right = location["x"] + size["width"]
@@ -215,6 +216,4 @@ class AmazonCaptcha(object):
         cropped.save(image_bytes_array, format="PNG")
         image_bytes_array.seek(0)
 
-        instance = cls(image_bytes_array, devmode)
-        instance._image_link = captcha.image_link
-        return instance
+        return cls(image_bytes_array, image_link=image_link, devmode=devmode)

@@ -3,7 +3,6 @@ import multiprocessing
 import os
 import re
 import requests
-import tempfile
 import time
 
 from . import __version__
@@ -27,11 +26,10 @@ class AmazonCaptchaCollector:
         self.keep_logs = keep_logs
         self.accuracy_test = accuracy_test
 
-        if not os.path.exists(self.output_folder):
-            os.mkdir(self.output_folder)
-
-        elif not os.path.isdir(self.output_folder):
+        if os.path.exists(self.output_folder) and not os.path.isdir(self.output_folder):
             raise NotFolderError(self.output_folder)
+
+        os.makedirs(self.output_folder, exist_ok=True)
 
         self.collector_logs = os.path.join(self.output_folder, f"collector-logs-{__version__.replace('.', '')}.log")
         self.test_results = os.path.join(self.output_folder, "test-results.log")
@@ -47,24 +45,27 @@ class AmazonCaptchaCollector:
             str: Captcha link.
 
         """
-        debug_path = os.environ.get("AMAZONCAPTCHA_DEBUG_PATH", os.path.join(tempfile.gettempdir(), "amazoncaptcha_debug.log"))
-        with open(debug_path, "a", encoding="utf-8") as dbg:
-            dbg.write(f"\n--- Amazon HTML ({len(captcha_page.text)} chars) ---\n")
-            dbg.write(captcha_page.text[:2000])
-            dbg.write("\n--- src URLs ---\n")
-            all_img_srcs = re.findall(r'src="([^"]+)"', captcha_page.text)
-            for src in all_img_srcs:
-                dbg.write(f"  {src}\n")
-            dbg.write("--- captcha matches ---\n")
-            matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
-            for m in matches:
-                dbg.write(f"  {m}\n")
-            dbg.write(f"--- result: {matches[0] if matches else 'NONE'} ---\n")
+        matches = re.findall(r'src="([^"]*captcha[^"]*)"', captcha_page.text)
+
+        debug_path = os.environ.get("AMAZONCAPTCHA_DEBUG_PATH")
+        if debug_path:
+            with open(debug_path, "a", encoding="utf-8") as dbg:
+                dbg.write(f"\n--- Amazon HTML ({len(captcha_page.text)} chars) ---\n")
+                dbg.write(captcha_page.text[:2000])
+                dbg.write("\n--- src URLs ---\n")
+                all_img_srcs = re.findall(r'src="([^"]+)"', captcha_page.text)
+                for src in all_img_srcs:
+                    dbg.write(f"  {src}\n")
+                dbg.write("--- captcha matches ---\n")
+                for m in matches:
+                    dbg.write(f"  {m}\n")
+                dbg.write(f"--- result: {matches[0] if matches else 'NONE'} ---\n")
+
         return matches[0] if matches else ""
 
     def _extract_captcha_id(self, captcha_link):
         """Extracts a captcha id from a captcha link. If captcha_link is None, returns 'unknown'."""
-        if not captcha_link:
+        if not captcha_link or "/captcha/" not in captcha_link:
             return f"unknown_{int(time.time())}"
         return "".join(captcha_link.split("/captcha/")[1].replace(".jpg", "").split("/Captcha_"))
 
@@ -85,8 +86,7 @@ class AmazonCaptchaCollector:
                 raise RuntimeError("No captcha image found on the page")
 
             response = requests.get(captcha_link, timeout=30)
-            captcha = AmazonCaptcha(BytesIO(response.content))
-            captcha._image_link = captcha_link
+            captcha = AmazonCaptcha(BytesIO(response.content), image_link=captcha_link)
             original_image = captcha.img
 
             solution = captcha.solve(keep_logs=self.keep_logs, logs_path=self.not_solved_logs)
@@ -121,12 +121,11 @@ class AmazonCaptchaCollector:
 
         """
         goal = list(range(target))
-        chunk_size = max(target // processes, 1)
-        milestones = [goal[x : x + chunk_size] for x in range(0, len(goal), chunk_size)]
+        milestones = [chunk for i in range(processes) if (chunk := goal[i::processes])]
 
         jobs = []
-        for j in range(processes):
-            p = multiprocessing.Process(target=self._distribute_collecting, args=(milestones[j],))
+        for milestone in milestones:
+            p = multiprocessing.Process(target=self._distribute_collecting, args=(milestone,))
             jobs.append(p)
             p.start()
 

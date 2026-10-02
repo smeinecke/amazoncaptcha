@@ -10,6 +10,7 @@ class ContentTypeError(Exception):
     ):
         self.content_type = content_type
         self.message = message
+        super().__init__(content_type, message)
 
     def __str__(self):
         return f'"{self.content_type}" {self.message}'
@@ -23,6 +24,7 @@ class NotFolderError(Exception):
     def __init__(self, path, message="is not a folder. Cannot store images there."):
         self.path = path
         self.message = message
+        super().__init__(path, message)
 
     def __str__(self):
         return f'"{self.path}" {self.message}'
